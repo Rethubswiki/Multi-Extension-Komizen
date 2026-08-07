@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+message Source {
+  string id = 1;
+  string lang = 2;
+  string name = 3;
+  string baseUrl = 4;
+}
+
+message Extension {
+  string name = 1;
+  string pkg = 2;
+  string apk = 3;
+  string lang = 4;
+  int32 code = 5;
+  string version = 6;
+  int32 nsfw = 7;
+  repeated Source sources = 8;
+}
+
+message Index {
+  repeated Extension extensions = 1;
+}
