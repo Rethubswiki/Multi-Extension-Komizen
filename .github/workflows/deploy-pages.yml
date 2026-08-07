@@ -14,32 +14,44 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v5
 
-      - name: Setup JDK 21
-        uses: actions/setup-java@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          distribution: temurin
-          java-version: '21'
+          python-version: '3.11'
 
-      - name: Install Kotlin 2.4.20-Beta2
+      - name: Install protobuf compiler & Python deps
         run: |
-          wget https://github.com/JetBrains/kotlin/releases/download/v2.4.20-Beta2/kotlin-compiler-2.4.20-Beta2.zip
-          unzip kotlin-compiler-2.4.20-Beta2.zip
-          echo "$PWD/kotlinc/bin" >> $GITHUB_PATH
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          pip install protobuf
 
-      - name: Run generator
-        run: kotlin generate.kts
+      - name: Generate .pb files from JSON
+        run: python generate_komizen.py
 
       - name: Prepare pages folder
         run: |
-          mkdir -p pages
-          cp array.json pages/
-          cp array.min.json pages/
-          cp index.json pages/
-          cp index.min.json pages/
-          cp -r repo pages/
-          cp .nojekyll pages/
+          mkdir -p pages/repo
+          # Copy JSONs (root)
+          cp array.json pages/ 2>/dev/null || true
+          cp array.min.json pages/ 2>/dev/null || true
+          cp index.json pages/ 2>/dev/null || true
+          cp index.min.json pages/ 2>/dev/null || true
+          # Copy repo JSONs
+          cp repo/index.json pages/repo/ 2>/dev/null || true
+          cp repo/index.min.json pages/repo/ 2>/dev/null || true
+          # Copy .pb files (if generated)
+          cp index.pb pages/ 2>/dev/null || true
+          cp repo/index.pb pages/repo/ 2>/dev/null || true
+          cp repo/index.min.pb pages/repo/ 2>/dev/null || true
+          # Copy sources (optional)
+          cp -r sources pages/ 2>/dev/null || true
+          # Copy .nojekyll
+          cp .nojekyll pages/ 2>/dev/null || true
+          # Debug: list contents
+          ls -laR pages/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
